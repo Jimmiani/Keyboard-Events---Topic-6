@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Keyboard_Events___Topic_6
 {
@@ -13,7 +14,7 @@ namespace Keyboard_Events___Topic_6
 
         Random generator;
         Texture2D pacRTexture, pacLTexture, pacUTexture, pacDTexture, pacSTexture, currentPacTexture, exitTexture, barrierTexture, coinTexture;
-        Rectangle window, pacLocation, barrierRect1, barrierRect2, exitRect;
+        Rectangle window, pacLocation, exitRect;
         List<Rectangle> coins;
         List<Rectangle> barriers;
         Vector2 pacSpeed;
@@ -37,7 +38,7 @@ namespace Keyboard_Events___Topic_6
             _graphics.ApplyChanges();
             coins = new List<Rectangle>();
             barriers = new List<Rectangle>();
-            
+            generator = new Random();
             base.Initialize();
 
 
@@ -49,13 +50,16 @@ namespace Keyboard_Events___Topic_6
             isBig = false;
             barriers.Add(new Rectangle(0, 250, 350, 75));
             barriers.Add(new Rectangle(450, 250, 350, 75));
+
+
+            for (int i = 0; i < 7; i++)
+            {
+                coins.Add(new Rectangle(generator.Next(10, window.Width), generator.Next(10, 200), coinTexture.Width, coinTexture.Height));
+            }
             
-            coins.Add(new Rectangle(250, 10, coinTexture.Width, coinTexture.Height));
-            coins.Add(new Rectangle(475, 50, coinTexture.Width, coinTexture.Height));
-            coins.Add(new Rectangle(200, 400, coinTexture.Width, coinTexture.Height));
-            coins.Add(new Rectangle(400, 400, coinTexture.Width, coinTexture.Height));
+            
             exitRect = new Rectangle(700, 380, 100, 100);
-            generator = new Random();
+            
         }
 
         protected override void LoadContent()
@@ -84,7 +88,7 @@ namespace Keyboard_Events___Topic_6
             prevKeyboardState = keyboardState;
             keyboardState = Keyboard.GetState();
             pacSpeed = new Vector2();
-           
+            this.Window.Title = $"x = {mouseState.X}, y = {mouseState.Y}";
 
             // Speed and Textures
             if (pacSpeed.X == 0 && pacSpeed.Y == 0)
@@ -194,6 +198,7 @@ namespace Keyboard_Events___Topic_6
                     pacLocation.Offset(-pacSpeed);
             }
 
+
             base.Update(gameTime);
         }
 
@@ -203,12 +208,12 @@ namespace Keyboard_Events___Topic_6
 
             _spriteBatch.Begin();
 
-            _spriteBatch.Draw(barrierTexture, barrierRect1, Color.White);
-            _spriteBatch.Draw(barrierTexture, barrierRect2, Color.White);
             _spriteBatch.Draw(exitTexture, exitRect, Color.White);
             _spriteBatch.Draw(currentPacTexture, pacLocation, Color.White);
             foreach (Rectangle coin in coins)
                 _spriteBatch.Draw(coinTexture, coin, Color.White);
+            foreach (Rectangle barrier in barriers)
+                _spriteBatch.Draw(barrierTexture, barrier, Color.White);
             
             _spriteBatch.End();
 

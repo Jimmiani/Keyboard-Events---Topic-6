@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using System;
 
 namespace Keyboard_Events___Topic_6
 {
@@ -9,10 +10,14 @@ namespace Keyboard_Events___Topic_6
         private GraphicsDeviceManager _graphics;
         private SpriteBatch _spriteBatch;
 
+        Random generator;
         Texture2D pacRTexture, pacLTexture, pacUTexture, pacDTexture, pacSTexture, currentPacTexture;
         Rectangle window, pacLocation;
         Vector2 pacSpeed;
-        KeyboardState keyboardState;
+        KeyboardState keyboardState, prevKeyboardState;
+        MouseState mouseState;
+        bool spedUp, slowedDown, isBig;
+        int pacSize;
 
         public Game1()
         {
@@ -28,9 +33,13 @@ namespace Keyboard_Events___Topic_6
             _graphics.PreferredBackBufferHeight = window.Height;
             _graphics.ApplyChanges();
 
-
-            pacLocation = new Rectangle(10, 10, 75, 75);
+            pacSize = 75;
+            pacLocation = new Rectangle(10, 10, pacSize, pacSize);
             currentPacTexture = pacSTexture;
+            spedUp = false;
+            slowedDown = true;
+            isBig = false;
+            generator = new Random();
 
             base.Initialize();
         }
@@ -50,12 +59,14 @@ namespace Keyboard_Events___Topic_6
         {
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
-
+            
+            mouseState = Mouse.GetState();
+            prevKeyboardState = keyboardState;
             keyboardState = Keyboard.GetState();
             pacSpeed = new Vector2();
 
-            pacSpeed = Vector2.Zero;
 
+            // Speed and Textures
             if (pacSpeed.X == 0 && pacSpeed.Y == 0)
                 currentPacTexture = pacSTexture;
 
@@ -83,16 +94,61 @@ namespace Keyboard_Events___Topic_6
                 currentPacTexture = pacLTexture;
             }
 
+
+            // Go through walls
             if (pacLocation.Bottom < 0)
-                pacLocation = new Rectangle(pacLocation.X, (window.Height + pacLocation.Height), 75, 75);
+                pacLocation = new Rectangle(pacLocation.X, window.Height, pacSize, pacSize);
             if (pacLocation.Top > window.Height)
-                pacLocation = new Rectangle(pacLocation.X, -pacLocation.Height, 75, 75);
+                pacLocation = new Rectangle(pacLocation.X, -pacLocation.Height, pacSize, pacSize);
             if (pacLocation.Left > window.Width)
-                pacLocation = new Rectangle(-pacLocation.Width, pacLocation.Y, 75, 75);
+                pacLocation = new Rectangle(-pacLocation.Width, pacLocation.Y, pacSize, pacSize);
             if (pacLocation.Right < 0)
-                pacLocation = new Rectangle((window.Width + pacLocation.Width), pacLocation.Y, 75, 75);
+                pacLocation = new Rectangle(window.Width, pacLocation.Y, pacSize, pacSize);
+
+            // Mouse teleport
+            if (mouseState.LeftButton == ButtonState.Pressed)
+                pacLocation = new Rectangle(mouseState.X - (pacSize / 2), mouseState.Y - (pacSize / 2), pacSize, pacSize);
+
+            
+            // Get faster
+            if (keyboardState.IsKeyDown(Keys.OemPlus))
+            {
+                spedUp = true;
+                slowedDown = false;
+            }
+            if (spedUp)
+            {
+                pacSpeed *= 7;
+            }
+
+            // Slow down
+            if (keyboardState.IsKeyDown(Keys.OemMinus))
+            {
+                slowedDown = true;
+                spedUp = false;
+            }
+            if (slowedDown)
+            {
+                pacSpeed *= 1;
+            }
 
 
+            // Big
+            if ((keyboardState.IsKeyDown(Keys.Down) && keyboardState.IsKeyDown(Keys.Up) && !isBig)) 
+            {
+                pacLocation.Width *= 3;
+                pacLocation.Height *= 3;
+                pacSize *= 3;
+                isBig = true;
+               
+            }
+            
+
+            // Random Teleport
+            if (keyboardState.IsKeyDown(Keys.Space) && prevKeyboardState.IsKeyUp(Keys.Space))
+            {
+                pacLocation = new Rectangle(generator.Next(window.Width - pacSize), generator.Next(window.Height - pacSize), pacSize, pacSize);
+            }
 
             pacLocation.Offset(pacSpeed);
 
